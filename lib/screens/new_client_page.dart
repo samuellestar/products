@@ -389,12 +389,43 @@ class _PageNewClientState extends State<PageNewClient> {
             const SizedBox(
               height: 30,
             ),
-            const Text(
-              'Add more details',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
+            GestureDetector(
+              onTap: () {
+                showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        content: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Contact Name'),
+                            TextField(),
+                            Text('Contact Number'),
+                            TextField(),
+                            Text('Contact Type'),
+                            TextField(),
+                            Text('Email'),
+                            TextField(),
+                          ],
+                        ),
+                        actions: [
+                          ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text("ADD"))
+                        ],
+                      );
+                    });
+              },
+              child: const Text(
+                'Add more details',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline,
+                ),
               ),
             ),
             const SizedBox(
