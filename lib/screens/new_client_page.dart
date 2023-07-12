@@ -9,10 +9,7 @@ class PageNewClient extends StatefulWidget {
 }
 
 class _PageNewClientState extends State<PageNewClient> {
-  List<String> contactNameList = [];
-  List<String> contactNumberList = [];
-  List<String> contactTypeList = [];
-  List<String> contactEmailList = [];
+  List<Contact> contacts = [];
 
   final formKey = GlobalKey<FormState>();
   final contactNameController = TextEditingController();
@@ -33,16 +30,20 @@ class _PageNewClientState extends State<PageNewClient> {
   int selectedIndex = -1;
 
   void addItemToList() {
+    String contactName = contactNameController.text;
+    contactNameController.clear();
+
+    String contactNumber = contactNumberController.text;
+    contactNumberController.clear();
+
+    String contactEmail = contactEmailController.text;
+    contactEmailController.clear();
+
+    selectedContactType = selectedContactType.toString();
+
     setState(() {
-      contactNameList.add(contactNameController.text);
-      contactNameController.clear();
-
-      contactNumberList.add(contactNumberController.text);
-      contactNumberController.clear();
-
-      contactEmailController.clear();
-
-      contactTypeList.add(selectedContactType.toString());
+      contacts.add(Contact(
+          contactName, contactNumber, contactEmail, selectedContactType));
     });
   }
 
@@ -445,12 +446,12 @@ class _PageNewClientState extends State<PageNewClient> {
               GestureDetector(
                 onTap: () {
                   openDialog();
-                  // setState(() {
-                  //   contactNameController.clear();
-                  //   contactNumberController.clear();
-                  //   contactEmailController.clear();
-                  //   selectedContactType = '';
-                  // });
+                  setState(() {
+                    contactNameController.clear();
+                    contactNumberController.clear();
+                    contactEmailController.clear();
+                    selectedContactType = '';
+                  });
                 },
                 child: const Text(
                   'Add more details',
@@ -464,12 +465,15 @@ class _PageNewClientState extends State<PageNewClient> {
               const SizedBox(
                 height: 20,
               ),
-              const Text(
-                'Add more contacts',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  decoration: TextDecoration.underline,
+              GestureDetector(
+                onTap: () {},
+                child: const Text(
+                  'Add more contacts',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
               const SizedBox(
@@ -613,14 +617,14 @@ class _PageNewClientState extends State<PageNewClient> {
                         ],
                       ),
                       ...List.generate(
-                        contactNameList.length,
+                        contacts.length,
                         (index) => TableRow(
                           children: [
                             TableCell(
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
-                                  contactNameList[index],
+                                  contacts[index].name,
                                   style: const TextStyle(
                                     color: Colors.black,
                                   ),
@@ -631,7 +635,7 @@ class _PageNewClientState extends State<PageNewClient> {
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
-                                  contactNumberList[index],
+                                  contacts[index].number,
                                   style: const TextStyle(
                                     color: Colors.black,
                                   ),
@@ -642,7 +646,7 @@ class _PageNewClientState extends State<PageNewClient> {
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
-                                  contactTypeList[index],
+                                  contacts[index].type,
                                   style: const TextStyle(
                                     color: Colors.black,
                                   ),
@@ -657,16 +661,15 @@ class _PageNewClientState extends State<PageNewClient> {
                                     openUpdateDialog();
                                     selectedIndex = index;
                                     contactNameController.text =
-                                        contactNameList[index];
+                                        contacts[index].name;
 
                                     contactNumberController.text =
-                                        contactNumberList[index];
+                                        contacts[index].number;
 
                                     contactEmailController.text =
-                                        contactEmailList[index];
+                                        contacts[index].email;
 
-                                    selectedContactType =
-                                        contactTypeList[index];
+                                    selectedContactType = contacts[index].type;
                                   },
                                   child: const Icon(
                                     Icons.mode_edit_outline_rounded,
@@ -682,9 +685,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                   onTap: () {
                                     // openDialogDelete();
                                     setState(() {
-                                      contactNameList.removeAt(index);
-                                      contactNumberList.removeAt(index);
-                                      contactTypeList.removeAt(index);
+                                      contacts.removeAt(index);
                                     });
                                   },
                                   child: const Icon(
@@ -866,7 +867,28 @@ class _PageNewClientState extends State<PageNewClient> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-            )
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 50,
+                      vertical: 10,
+                    ),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    )),
+                child: const Text(
+                  "Close",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -881,6 +903,14 @@ class _PageNewClientState extends State<PageNewClient> {
       ),
     );
   }
+
+  //
+  //
+  ///
+  ///
+  ///
+  ///
+  ///
 
   Future openUpdateDialog() => showDialog(
         context: context,
@@ -1022,15 +1052,18 @@ class _PageNewClientState extends State<PageNewClient> {
                   final form = formKey.currentState;
                   if (form!.validate()) {
                     Navigator.pop(context);
-                    contactNameList[selectedIndex] = contactNameController.text;
+                    setState(() {
+                      contacts[selectedIndex].name = contactNameController.text;
 
-                    contactNumberList[selectedIndex] =
-                        contactNumberController.text;
+                      contacts[selectedIndex].number =
+                          contactNumberController.text;
 
-                    contactEmailList[selectedIndex] =
-                        contactEmailController.text;
+                      contacts[selectedIndex].email =
+                          contactEmailController.text;
 
-                    contactTypeList[selectedIndex] = selectedType.toString();
+                      contacts[selectedIndex].type =
+                          selectedContactType.toString();
+                    });
                   } else {}
                 },
                 style: ElevatedButton.styleFrom(
@@ -1047,10 +1080,40 @@ class _PageNewClientState extends State<PageNewClient> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-            )
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 50,
+                      vertical: 10,
+                    ),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    )),
+                child: const Text(
+                  "Close",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
           ],
         ),
       );
 
   //
+}
+
+class Contact {
+  String name;
+  String number;
+  String email;
+  dynamic type;
+
+  Contact(this.name, this.number, this.email, this.type);
 }
