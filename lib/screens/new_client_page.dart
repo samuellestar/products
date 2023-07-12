@@ -904,13 +904,6 @@ class _PageNewClientState extends State<PageNewClient> {
     );
   }
 
-  //
-  //
-  ///
-  ///
-  ///
-  ///
-  ///
 
   Future openUpdateDialog() => showDialog(
         context: context,
@@ -1106,7 +1099,6 @@ class _PageNewClientState extends State<PageNewClient> {
         ),
       );
 
-  //
 }
 
 class Contact {
