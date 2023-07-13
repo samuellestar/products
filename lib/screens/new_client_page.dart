@@ -830,17 +830,6 @@ class _PageNewClientState extends State<PageNewClient> {
           ],
         ),
       );
-
-  // Text showDetils() {
-  //   return const Text(
-  //     'Details',
-  //     style: TextStyle(
-  //       fontSize: 18,
-  //       fontWeight: FontWeight.bold,
-  //       decoration: TextDecoration.underline,
-  //     ),
-  //   );
-  // }
 }
 
 class Contact {
