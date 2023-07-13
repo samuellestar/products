@@ -25,9 +25,10 @@ class _PageNewClientState extends State<PageNewClient> {
   String? selectedType = 'End User';
   String? selectedAssignedUser = 'sajith';
   String? selectedRoute = '';
-  String? selectedContactType = '';
+  String? selectedContactType = 'Home';
 
   int selectedIndex = -1;
+  bool isUpdating = false;
 
   void addItemToList() {
     String contactName = contactNameController.text;
@@ -419,25 +420,6 @@ class _PageNewClientState extends State<PageNewClient> {
                       ),
                     ],
                   ),
-
-                  // DropdownButtonFormField(
-                  //   decoration: InputDecoration(labelText: 'Type'),
-                  //   icon: Icon(Icons.keyboard_arrow_down_sharp),
-                  //   value: selectedType,
-                  //   items: type
-                  //       .map((e) => DropdownMenuItem(
-                  //             child: Text(e),
-                  //             value: e,
-                  //           ))
-                  //       .toList(),
-                  //   onChanged: (val) {
-                  //     setState(() {
-                  //       selectedType = val as String;
-                  //     });
-                  //   },
-                  // ),
-
-                  //
                 ],
               ),
               const SizedBox(
@@ -446,6 +428,7 @@ class _PageNewClientState extends State<PageNewClient> {
               GestureDetector(
                 onTap: () {
                   openDialog();
+                  isUpdating = false;
                   setState(() {
                     contactNameController.clear();
                     contactNumberController.clear();
@@ -479,72 +462,6 @@ class _PageNewClientState extends State<PageNewClient> {
               const SizedBox(
                 height: 60,
               ),
-
-              // detils
-
-              // Column(
-              //   children: [
-              //     const Text(
-              //       'DETAILS',
-              //       style: TextStyle(
-              //         fontSize: 18,
-              //         fontWeight: FontWeight.bold,
-              //       ),
-              //     ),
-              //     // const SizedBox(
-              //     //   height: 20,
-              //     // ),
-              //     Container(
-              //       color: Colors.black,
-              //       height: 4,
-              //     ),
-              //     const SizedBox(
-              //       height: 20,
-              //     ),
-              //     Text(
-              //       'Contact Name: ${contactNameController.text}',
-              //       style: const TextStyle(
-              //         color: Colors.black,
-              //         fontSize: 16,
-              //       ),
-              //     ),
-              //     const SizedBox(
-              //       height: 20,
-              //     ),
-              //     Text(
-              //       'Contact Number: ${contactNumberController.text}',
-              //       style: const TextStyle(
-              //         color: Colors.black,
-              //         fontSize: 16,
-              //       ),
-              //     ),
-              //     const SizedBox(
-              //       height: 20,
-              //     ),
-              //     Text(
-              //       'Contact Email: ${contactEmailController.text}',
-              //       style: const TextStyle(
-              //         fontSize: 16,
-              //         color: Colors.black,
-              //       ),
-              //     ),
-              //     const SizedBox(
-              //       height: 20,
-              //     ),
-              //     Text(
-              //       'Contact Type: $selectedContactType',
-              //       style: const TextStyle(
-              //         color: Colors.black,
-              //         fontSize: 16,
-              //       ),
-              //     ),
-              //     Container(
-              //       color: Colors.black,
-              //       height: 4,
-              //     ),
-              //   ],
-              // )
-
               Container(
                 color: Colors.white,
                 child: Expanded(
@@ -658,7 +575,8 @@ class _PageNewClientState extends State<PageNewClient> {
                                 padding: const EdgeInsets.all(8.0),
                                 child: GestureDetector(
                                   onTap: () {
-                                    openUpdateDialog();
+                                    isUpdating = true;
+                                    openDialog();
                                     selectedIndex = index;
                                     contactNameController.text =
                                         contacts[index].name;
@@ -846,12 +764,32 @@ class _PageNewClientState extends State<PageNewClient> {
               alignment: Alignment.center,
               child: ElevatedButton(
                 onPressed: () {
-                  final form = formKey.currentState;
-                  if (form!.validate()) {
-                    addItemToList();
-                    selectedContactType = '';
-                    Navigator.pop(context);
-                  } else {}
+                  if (isUpdating) {
+                    final form = formKey.currentState;
+                    if (form!.validate()) {
+                      Navigator.pop(context);
+                      setState(() {
+                        contacts[selectedIndex].name =
+                            contactNameController.text;
+
+                        contacts[selectedIndex].number =
+                            contactNumberController.text;
+
+                        contacts[selectedIndex].email =
+                            contactEmailController.text;
+
+                        contacts[selectedIndex].type =
+                            selectedContactType.toString();
+                      });
+                    }
+                  } else {
+                    final form = formKey.currentState;
+                    if (form!.validate()) {
+                      addItemToList();
+                      selectedContactType = '';
+                      Navigator.pop(context);
+                    }
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
@@ -862,9 +800,9 @@ class _PageNewClientState extends State<PageNewClient> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     )),
-                child: const Text(
-                  "ADD",
-                  style: TextStyle(color: Colors.white),
+                child: Text(
+                  isUpdating ? 'Update' : 'Add',
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ),
@@ -893,212 +831,16 @@ class _PageNewClientState extends State<PageNewClient> {
         ),
       );
 
-  Text showDetils() {
-    return const Text(
-      'Details',
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        decoration: TextDecoration.underline,
-      ),
-    );
-  }
-
-
-  Future openUpdateDialog() => showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          // ignore: sized_box_for_whitespace
-          content: SingleChildScrollView(
-            // ignore: sized_box_for_whitespace
-            child: Container(
-              height: 400,
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const Text('Contact Name'),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: TextFormField(
-                              controller: contactNameController,
-                              validator: (val) =>
-                                  val!.isEmpty ? "enter a valid name" : null,
-                            ),
-                          ),
-                        ),
-                        const Icon(
-                          Icons.person_add_alt_rounded,
-                          color: Colors.blue,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const Text('Contact Number'),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: TextFormField(
-                              controller: contactNumberController,
-                              validator: (val) =>
-                                  val!.isEmpty || val.length != 10
-                                      ? "enter a valid number"
-                                      : null,
-                            ),
-                          ),
-                        ),
-                        const Icon(
-                          Icons.check_box_outline_blank,
-                          color: Colors.blue,
-                        ),
-                        const SizedBox(
-                          width: 18,
-                        ),
-                        Image.asset(
-                          'assets/images/whatsapp.jpg',
-                          height: 20,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const Text('Contact Type'),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          left: 5,
-                          right: 5,
-                        ),
-                        child: DropdownButtonFormField(
-                          icon: const Icon(Icons.keyboard_arrow_down_sharp),
-                          // value: selectedContactType,
-                          items: contactType
-                              .map((e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(e),
-                                  ))
-                              .toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              selectedContactType = val as String;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const Text('Email'),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: TextFormField(
-                          controller: contactEmailController,
-                          validator: (val) => val!.isEmpty ||
-                                  !val.contains("@") ||
-                                  !val.contains(".com")
-                              ? "enter a valid email"
-                              : null,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            Align(
-              alignment: Alignment.center,
-              child: ElevatedButton(
-                onPressed: () {
-                  final form = formKey.currentState;
-                  if (form!.validate()) {
-                    Navigator.pop(context);
-                    setState(() {
-                      contacts[selectedIndex].name = contactNameController.text;
-
-                      contacts[selectedIndex].number =
-                          contactNumberController.text;
-
-                      contacts[selectedIndex].email =
-                          contactEmailController.text;
-
-                      contacts[selectedIndex].type =
-                          selectedContactType.toString();
-                    });
-                  } else {}
-                },
-                style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 50,
-                      vertical: 10,
-                    ),
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    )),
-                child: const Text(
-                  "UPDATE",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.center,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 50,
-                      vertical: 10,
-                    ),
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    )),
-                child: const Text(
-                  "Close",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-
+  // Text showDetils() {
+  //   return const Text(
+  //     'Details',
+  //     style: TextStyle(
+  //       fontSize: 18,
+  //       fontWeight: FontWeight.bold,
+  //       decoration: TextDecoration.underline,
+  //     ),
+  //   );
+  // }
 }
 
 class Contact {
