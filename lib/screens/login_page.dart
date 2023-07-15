@@ -108,17 +108,6 @@ class PageLogin extends StatelessWidget {
                       ),
                     );
 
-                    // if (passwordController.text != '' &&
-                    //     userNameController.text != '') {
-                    //   Navigator.pushReplacement(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //       builder: (context) {
-                    //         return const HomePage();
-                    //       },
-                    //     ),
-                    //   );
-                    // }
                   },
                   style: ButtonStyle(
                     padding: MaterialStateProperty.all<EdgeInsets>(
