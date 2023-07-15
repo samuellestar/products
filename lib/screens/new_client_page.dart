@@ -1,5 +1,11 @@
+// ignore_for_file: avoid_unnecessary_containers, duplicate_ignore
+
 import 'package:flutter/material.dart';
-import 'package:forms/screens/home_page.dart';
+import 'package:forms/models/contact_model.dart';
+import 'package:forms/models/product_model.dart';
+import 'package:forms/models/selected_product.dart';
+
+import '../api/fetch_product_data.dart';
 
 class PageNewClient extends StatefulWidget {
   const PageNewClient({super.key});
@@ -9,7 +15,31 @@ class PageNewClient extends StatefulWidget {
 }
 
 class _PageNewClientState extends State<PageNewClient> {
+  late Future<List<Product>> productList;
+  // int quantity = 1;
+
+  // void increaseQuantity() {
+  //   setState(() {
+  //     quantity++;
+  //   });
+  // }
+
+  // void decreaseQuantity() {
+  //   setState(() {
+  //     if (quantity > 1) {
+  //       quantity--;
+  //     }
+  //   });
+  // }
+
+  @override
+  void initState() {
+    super.initState();
+    productList = fetchData();
+  }
+
   List<Contact> contacts = [];
+  List<SelectedProducts> selectedProducts = [];
 
   final formKey = GlobalKey<FormState>();
   final contactNameController = TextEditingController();
@@ -28,6 +58,7 @@ class _PageNewClientState extends State<PageNewClient> {
   String? selectedContactType = 'Home';
 
   int selectedIndex = -1;
+  int selectedProductIndex = -1;
   bool isUpdating = false;
 
   void addItemToList() {
@@ -46,6 +77,72 @@ class _PageNewClientState extends State<PageNewClient> {
       contacts.add(Contact(
           contactName, contactNumber, contactEmail, selectedContactType));
     });
+  }
+
+  void copyProductContent(Product product) {
+    bool isExistingProduct = false;
+
+    for (var selectedProduct in selectedProducts) {
+      if (selectedProduct.title == product.title) {
+        double originalPrice = product.price;
+        // Product already exists in selectedProducts list
+        isExistingProduct = true;
+        selectedProduct.qty += 1;
+        selectedProduct.price = originalPrice * selectedProduct.qty;
+      }
+    }
+
+    if (!isExistingProduct) {
+      // Product does not exist in selectedProducts list
+      SelectedProducts copiedProduct = SelectedProducts(
+        title: product.title,
+        stock: product.stock,
+        price: product.price,
+        qty: 1,
+        originalPrice: product.price,
+      );
+      selectedProducts.add(copiedProduct);
+    }
+  }
+
+  void increseProductCount(Product product) {
+    for (var selectedProduct in selectedProducts) {
+      if (selectedProduct.title == product.title) {
+        selectedProduct.qty += 1;
+        selectedProduct.price =
+            selectedProduct.originalPrice * selectedProduct.qty;
+      }
+    }
+  }
+
+  void decrementProductQuantity(int index) {
+    setState(() {
+      if (selectedProducts[index].qty > 1) {
+        selectedProducts[index].qty = selectedProducts[index].qty - 1;
+
+        selectedProducts[index].price =
+            selectedProducts[index].originalPrice * selectedProducts[index].qty;
+      } else {
+        selectedProducts.removeAt(index);
+      }
+
+    });
+  }
+
+  void incrementProductQuantity(int index) {
+    setState(() {
+      selectedProducts[index].qty = selectedProducts[index].qty + 1;
+      selectedProducts[index].price =
+          selectedProducts[index].originalPrice * selectedProducts[index].qty;
+    });
+  }
+
+  double get totalCost {
+    double cost = 0.0;
+    for (var selectedProduct in selectedProducts) {
+      cost = cost + selectedProduct.price;
+    }
+    return cost;
   }
 
   @override
@@ -294,14 +391,7 @@ class _PageNewClientState extends State<PageNewClient> {
                           child: TextField(
                             decoration: InputDecoration(
                               suffixIcon: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const HomePage(),
-                                    ),
-                                  );
-                                },
+                                onTap: () {},
                                 child: const Icon(
                                   Icons.access_time,
                                 ),
@@ -429,6 +519,7 @@ class _PageNewClientState extends State<PageNewClient> {
                 onTap: () {
                   openDialog();
                   isUpdating = false;
+
                   setState(() {
                     contactNameController.clear();
                     contactNumberController.clear();
@@ -460,166 +551,437 @@ class _PageNewClientState extends State<PageNewClient> {
                 ),
               ),
               const SizedBox(
-                height: 60,
+                height: 20,
               ),
-              Container(
-                color: Colors.white,
-                child: Expanded(
-                  child: Table(
-                    border: TableBorder.all(color: Colors.grey),
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    children: [
-                      const TableRow(
-                        children: [
-                          TableCell(
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                'Contact Name',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                'Contact Number',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                'Contact Type',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                'Edit',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                'Delete',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      ...List.generate(
-                        contacts.length,
-                        (index) => TableRow(
+
+              contacts.isEmpty
+                  ? Container(
+                      color: Colors.transparent,
+                    )
+                  : Container(
+                      color: Colors.white,
+                      child: Expanded(
+                        child: Table(
+                          border: TableBorder.all(color: Colors.grey),
+                          defaultVerticalAlignment:
+                              TableCellVerticalAlignment.middle,
                           children: [
-                            TableCell(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  contacts[index].name,
-                                  style: const TextStyle(
-                                    color: Colors.black,
+                            const TableRow(
+                              children: [
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Contact Name',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            TableCell(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  contacts[index].number,
-                                  style: const TextStyle(
-                                    color: Colors.black,
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Contact Number',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            TableCell(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  contacts[index].type,
-                                  style: const TextStyle(
-                                    color: Colors.black,
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Contact Type',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Edit',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Delete',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            TableCell(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    isUpdating = true;
-                                    openDialog();
-                                    selectedIndex = index;
-                                    contactNameController.text =
-                                        contacts[index].name;
+                            ...List.generate(
+                              contacts.length,
+                              (index) => TableRow(
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        contacts[index].name,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        contacts[index].number,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        contacts[index].type,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          isUpdating = true;
+                                          openDialog();
+                                          selectedIndex = index;
+                                          contactNameController.text =
+                                              contacts[index].name;
 
-                                    contactNumberController.text =
-                                        contacts[index].number;
+                                          contactNumberController.text =
+                                              contacts[index].number;
 
-                                    contactEmailController.text =
-                                        contacts[index].email;
+                                          contactEmailController.text =
+                                              contacts[index].email;
 
-                                    selectedContactType = contacts[index].type;
-                                  },
-                                  child: const Icon(
-                                    Icons.mode_edit_outline_rounded,
-                                    color: Colors.blue,
+                                          selectedContactType =
+                                              contacts[index].type;
+                                        },
+                                        child: const Icon(
+                                          Icons.mode_edit_outline_rounded,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ),
-                            TableCell(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    // openDialogDelete();
-                                    setState(() {
-                                      contacts.removeAt(index);
-                                    });
-                                  },
-                                  child: const Icon(
-                                    Icons.delete,
-                                    color: Colors.blue,
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          // openDialogDelete();
+                                          setState(() {
+                                            contacts.removeAt(index);
+                                          });
+                                        },
+                                        child: const Icon(
+                                          Icons.delete,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      )
+                      ),
+                    ),
+              const SizedBox(
+                height: 20,
+              ),
+
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Text(
+                      'Add product',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              // ignore: duplicate_ignore
+              GestureDetector(
+                onTap: () {
+                  openProductDialog();
+                },
+                // ignore: avoid_unnecessary_containers
+                child: Container(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Search Product Name...',
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: 10,
+                                left: 20,
+                                right: 20,
+                              ),
+                              child: Container(
+                                height: 2,
+                                color: Colors.black54,
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 20),
+                        child: Icon(
+                          Icons.search,
+                          color: Colors.grey.shade800,
+                          size: 30,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
+              const Row(
+                children: [
+                  // Container(
+                  //   child: Column(
+                  //     children: [
+                  //       Text('Search Product Name...'),
+
+                  //     ],
+                  //   ),
+                  // )
+                  // Expanded(
+                  //   child: Padding(
+                  //     padding: const EdgeInsets.only(
+                  //       left: 25,
+                  //       right: 25,
+                  //     ),
+                  //     child: TextFormField(
+                  //       onChanged: (value) {
+                  //         // filterProducts(value);
+                  //       },
+                  //       decoration: InputDecoration(
+                  //         suffixIcon: const Icon(Icons.search),
+                  //         label: Center(
+                  //           child: Text(
+                  //             'Search Product Name....',
+                  //             style: TextStyle(
+                  //               color: Colors.grey.shade600,
+                  //               fontSize: 18,
+                  //               fontWeight: FontWeight.w500,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
+
+              const SizedBox(
+                height: 20,
+              ),
+
+              // table
+
+              selectedProducts.isEmpty
+                  ? Container(
+                      color: Colors.transparent,
+                    )
+                  : Container(
+                      color: Colors.white,
+                      child: Expanded(
+                        child: Table(
+                          border: TableBorder.all(color: Colors.grey),
+                          defaultVerticalAlignment:
+                              TableCellVerticalAlignment.middle,
+                          children: [
+                            const TableRow(
+                              children: [
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      textAlign: TextAlign.center,
+                                      'Product',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Qty',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      textAlign: TextAlign.center,
+                                      'Price',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            ...List.generate(
+                              selectedProducts.length,
+                              (index) => TableRow(
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        textAlign: TextAlign.center,
+                                        selectedProducts[index].title,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                decrementProductQuantity(index);
+                                              });
+                                            },
+                                            //
+
+                                            //
+
+                                            child: Container(
+                                              child: const Icon(
+                                                  Icons.chevron_left),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: 10,
+                                              left: 10,
+                                            ),
+                                            child: Text(
+                                              selectedProducts[index]
+                                                  .qty
+                                                  .toString(),
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                incrementProductQuantity(index);
+                                              });
+                                            },
+                                            //
+
+                                            //
+
+                                            child: Container(
+                                                child: const Icon(
+                                                    Icons.chevron_right)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        textAlign: TextAlign.center,
+                                        selectedProducts[index]
+                                            .price
+                                            .toString(),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              const SizedBox(
+                height: 20,
+              ),
+              selectedProducts.isEmpty
+                  ? Container(
+                      color: Colors.transparent,
+                    )
+                  : Text('Total cost: ${totalCost.toStringAsFixed(2)}')
             ],
           ),
         ),
@@ -830,13 +1192,80 @@ class _PageNewClientState extends State<PageNewClient> {
           ],
         ),
       );
-}
 
-class Contact {
-  String name;
-  String number;
-  String email;
-  dynamic type;
+  Future openProductDialog() => showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          // ignore: sized_box_for_whitespace
+          content: Container(
+            width: 300,
+            child: Column(
+              children: [
+                TextFormField(
+                  // onChanged: (value) => updateList(value),
+                  decoration: const InputDecoration(
+                    hintText: 'Search Product Name',
+                    // border: OutlineInputBorder(
+                    //   borderRadius: BorderRadius.circular(0),
+                    // ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Expanded(
+                  child: FutureBuilder<List<Product>>(
+                    future: productList,
+                    builder: (BuildContext context, AsyncSnapshot snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (snapshot.hasData) {
+                          return ListView.builder(
+                            itemCount: snapshot.data.length,
+                            itemBuilder: (context, index) {
+                              Product data = snapshot.data[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    copyProductContent(data);
+                                  });
 
-  Contact(this.name, this.number, this.email, this.type);
+                                  Navigator.pop(context);
+                                },
+                                child: Card(
+                                  child: ListTile(
+                                    title: Text(data.title),
+                                    subtitle:
+                                        Text((data.price).toStringAsFixed(2)),
+                                    // leading: Text('${index + 1}'),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Text('${snapshot.error}'),
+                          );
+                        }
+                      }
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: const Text(
+                'Close',
+              ),
+            ),
+          ],
+        ),
+      );
 }

@@ -98,7 +98,7 @@ class PageLogin extends StatelessWidget {
                   onPressed: () {
                     if (passwordController.text != '' &&
                         userNameController.text != '') {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) {

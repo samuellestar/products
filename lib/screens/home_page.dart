@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forms/components/linear_gradient.dart';
 import 'package:forms/screens/new_client_page.dart';
+import 'package:forms/screens/product_list.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -10,15 +11,15 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-          ),
-        ),
+        // leading: IconButton(
+        //   onPressed: () {
+        //     Navigator.pop(context);
+        //   },
+        //   icon: const Icon(
+        //     Icons.arrow_back_ios_new_rounded,
+        //     color: Colors.white,
+        //   ),
+        // ),
         title: const Text(
           'Home',
           style: TextStyle(
@@ -93,34 +94,44 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Card(
-                    elevation: 3,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(
-                          color: Colors.black,
-                          style: BorderStyle.none,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PageProductList(),
                         ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/images/two.jpg',
-                            height: 75,
+                      );
+                    },
+                    child: Card(
+                      elevation: 3,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(
+                            color: Colors.black,
+                            style: BorderStyle.none,
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          const Text(
-                            'Product List',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.teal,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/images/two.jpg',
+                              height: 75,
                             ),
-                          ),
-                        ],
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            const Text(
+                              'Product List',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.teal,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
