@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forms/components/linear_gradient.dart';
 import 'package:forms/screens/new_client_page.dart';
 import 'package:forms/screens/product_list.dart';
+import 'package:forms/screens/splash_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -26,6 +28,30 @@ class HomePage extends StatelessWidget {
             color: Colors.white,
           ),
         ),
+        actions: [
+          GestureDetector(
+            onTap: () async {
+              final SharedPreferences sharedPreferences =
+                  await SharedPreferences.getInstance();
+
+              sharedPreferences.remove('email');
+              // ignore: use_build_context_synchronously
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SplashScreen(),
+                ),
+              );
+            },
+            child: const Padding(
+              padding: EdgeInsets.only(right: 15),
+              child: Icon(
+                Icons.logout_rounded,
+                color: Colors.white,
+              ),
+            ),
+          )
+        ],
         elevation: 3,
       ),
       body: GradientContainer(
