@@ -54,7 +54,7 @@ class _PageNewClientState extends State<PageNewClient> {
 
   String? selectedType = 'End User';
   String? selectedAssignedUser = 'sajith';
-  String? selectedRoute = '';
+  String? selectedRoute = 'Ekm';
   String? selectedContactType = 'Home';
 
   int selectedIndex = -1;
@@ -125,7 +125,6 @@ class _PageNewClientState extends State<PageNewClient> {
       } else {
         selectedProducts.removeAt(index);
       }
-
     });
   }
 
@@ -562,7 +561,7 @@ class _PageNewClientState extends State<PageNewClient> {
                       color: Colors.white,
                       child: Expanded(
                         child: Table(
-                          border: TableBorder.all(color: Colors.grey),
+                          border: TableBorder.all(color: Colors.transparent),
                           defaultVerticalAlignment:
                               TableCellVerticalAlignment.middle,
                           children: [
@@ -576,6 +575,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                     ),
                                   ),
@@ -588,6 +588,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                     ),
                                   ),
@@ -600,6 +601,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                     ),
                                   ),
@@ -611,6 +613,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                       'Edit',
                                       style: TextStyle(
                                         color: Colors.black,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -624,6 +627,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                     ),
                                   ),
@@ -741,43 +745,50 @@ class _PageNewClientState extends State<PageNewClient> {
                 height: 20,
               ),
               // ignore: duplicate_ignore
-              GestureDetector(
-                onTap: () {
-                  openProductDialog();
-                },
-                // ignore: avoid_unnecessary_containers
-                child: Container(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Search Product Name...',
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                top: 10,
-                                left: 20,
-                                right: 20,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: GestureDetector(
+                  onTap: () {
+                    openProductDialog();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              const Text(
+                                'Search Product Name...',
                               ),
-                              child: Container(
-                                height: 2,
-                                color: Colors.black54,
-                              ),
-                            )
-                          ],
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 10,
+                                  left: 20,
+                                  right: 20,
+                                ),
+                                child: Container(
+                                  height: 2,
+                                  color: Colors.black54,
+                                ),
+                              )
+                            ],
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 20),
-                        child: Icon(
-                          Icons.search,
-                          color: Colors.grey.shade800,
-                          size: 30,
+                        Padding(
+                          padding: const EdgeInsets.only(right: 20),
+                          child: Icon(
+                            Icons.search,
+                            color: Colors.grey.shade800,
+                            size: 30,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -834,7 +845,7 @@ class _PageNewClientState extends State<PageNewClient> {
                       color: Colors.white,
                       child: Expanded(
                         child: Table(
-                          border: TableBorder.all(color: Colors.grey),
+                          border: TableBorder.all(color: Colors.transparent),
                           defaultVerticalAlignment:
                               TableCellVerticalAlignment.middle,
                           children: [
@@ -849,6 +860,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                     ),
                                   ),
@@ -861,6 +873,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -875,6 +888,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                     ),
                                   ),
@@ -981,7 +995,25 @@ class _PageNewClientState extends State<PageNewClient> {
                   ? Container(
                       color: Colors.transparent,
                     )
-                  : Text('Total cost: ${totalCost.toStringAsFixed(2)}')
+                  : Padding(
+                      padding: const EdgeInsets.only(
+                        right: 15,
+                        bottom: 30,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Total cost: ${totalCost.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
             ],
           ),
         ),
