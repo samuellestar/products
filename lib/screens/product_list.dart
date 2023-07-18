@@ -51,6 +51,7 @@ class _PageProductListState extends State<PageProductList> {
                   Product data = snapshot.data[index];
                   return ListTile(
                     title: Text(data.title),
+                    trailing: Text('₹${data.price}'),
                     // leading: Text('${index + 1}'),
                   );
                 },

@@ -1,11 +1,22 @@
-// ignore_for_file: avoid_unnecessary_containers, duplicate_ignore
+// ignore_for_file: avoid_unnecessary_containers, avoid_print
 
+import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:forms/models/contact_model.dart';
 import 'package:forms/models/product_model.dart';
 import 'package:forms/models/selected_product.dart';
-
+import 'package:forms/screens/contact_page.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import '../api/fetch_product_data.dart';
+
+class SelectedContact {
+  String name;
+  String number;
+
+  SelectedContact(this.name, this.number);
+}
 
 class PageNewClient extends StatefulWidget {
   const PageNewClient({super.key});
@@ -16,21 +27,45 @@ class PageNewClient extends StatefulWidget {
 
 class _PageNewClientState extends State<PageNewClient> {
   late Future<List<Product>> productList;
-  // int quantity = 1;
+  Contact? selectedContact;
 
-  // void increaseQuantity() {
-  //   setState(() {
-  //     quantity++;
-  //   });
-  // }
+  List<ContactModel> contacts = [];
+  List<SelectedProducts> selectedProducts = [];
 
-  // void decreaseQuantity() {
-  //   setState(() {
-  //     if (quantity > 1) {
-  //       quantity--;
-  //     }
-  //   });
-  // }
+  String currentAddress = 'My Address';
+  late Position currentPosition;
+
+  final formKey = GlobalKey<FormState>();
+  final contactNameController = TextEditingController();
+  final contactNumberController = TextEditingController();
+  final contactEmailController = TextEditingController();
+  final updateNameController = TextEditingController();
+  final locationController = TextEditingController();
+  final addContactNameController = TextEditingController();
+  final addContactNumberController = TextEditingController();
+  final productNameController = TextEditingController();
+  final productRateController = TextEditingController();
+  final productQtyController = TextEditingController();
+  final productTotalController = TextEditingController();
+  final productTaxController = TextEditingController();
+
+  final type = ['End User', 'one', 'two'];
+  final assignedUser = ['sajith', 'samuel', 'helen'];
+  final routes = ['Ekm', 'Tsr', 'Tvm'];
+  final contactType = ['Home', 'Office', 'Other'];
+  final taxPercentage = ['18', '5', '0', '12', '19'];
+  final taxInclude = ['Yes', 'No'];
+
+  String? selectedType = 'End User';
+  String? selectedAssignedUser = 'sajith';
+  String? selectedRoute = 'Ekm';
+  String? selectedContactType = 'Home';
+  String? selectedTaxPercentage = '0';
+  String? selectedTaxInclude = 'No';
+
+  int selectedIndex = -1;
+  int selectedProductIndex = -1;
+  bool isUpdating = false;
 
   @override
   void initState() {
@@ -38,120 +73,12 @@ class _PageNewClientState extends State<PageNewClient> {
     productList = fetchData();
   }
 
-  List<Contact> contacts = [];
-  List<SelectedProducts> selectedProducts = [];
-
-  final formKey = GlobalKey<FormState>();
-  final contactNameController = TextEditingController();
-  final contactNumberController = TextEditingController();
-  final contactEmailController = TextEditingController();
-  final updateNameController = TextEditingController();
-
-  final type = ['End User', 'one', 'two'];
-  final assignedUser = ['sajith', 'samuel', 'helen'];
-  final routes = ['Ekm', 'Tsr', 'Tvm'];
-  final contactType = ['Home', 'Office', 'Other'];
-
-  String? selectedType = 'End User';
-  String? selectedAssignedUser = 'sajith';
-  String? selectedRoute = 'Ekm';
-  String? selectedContactType = 'Home';
-
-  int selectedIndex = -1;
-  int selectedProductIndex = -1;
-  bool isUpdating = false;
-
-  void addItemToList() {
-    String contactName = contactNameController.text;
-    contactNameController.clear();
-
-    String contactNumber = contactNumberController.text;
-    contactNumberController.clear();
-
-    String contactEmail = contactEmailController.text;
-    contactEmailController.clear();
-
-    selectedContactType = selectedContactType.toString();
-
-    setState(() {
-      contacts.add(Contact(
-          contactName, contactNumber, contactEmail, selectedContactType));
-    });
-  }
-
-  void copyProductContent(Product product) {
-    bool isExistingProduct = false;
-
-    for (var selectedProduct in selectedProducts) {
-      if (selectedProduct.title == product.title) {
-        double originalPrice = product.price;
-        // Product already exists in selectedProducts list
-        isExistingProduct = true;
-        selectedProduct.qty += 1;
-        selectedProduct.price = originalPrice * selectedProduct.qty;
-      }
-    }
-
-    if (!isExistingProduct) {
-      // Product does not exist in selectedProducts list
-      SelectedProducts copiedProduct = SelectedProducts(
-        title: product.title,
-        stock: product.stock,
-        price: product.price,
-        qty: 1,
-        originalPrice: product.price,
-      );
-      selectedProducts.add(copiedProduct);
-    }
-  }
-
-  void increseProductCount(Product product) {
-    for (var selectedProduct in selectedProducts) {
-      if (selectedProduct.title == product.title) {
-        selectedProduct.qty += 1;
-        selectedProduct.price =
-            selectedProduct.originalPrice * selectedProduct.qty;
-      }
-    }
-  }
-
-  void decrementProductQuantity(int index) {
-    setState(() {
-      if (selectedProducts[index].qty > 1) {
-        selectedProducts[index].qty = selectedProducts[index].qty - 1;
-
-        selectedProducts[index].price =
-            selectedProducts[index].originalPrice * selectedProducts[index].qty;
-      } else {
-        selectedProducts.removeAt(index);
-      }
-    });
-  }
-
-  void incrementProductQuantity(int index) {
-    setState(() {
-      selectedProducts[index].qty = selectedProducts[index].qty + 1;
-      selectedProducts[index].price =
-          selectedProducts[index].originalPrice * selectedProducts[index].qty;
-    });
-  }
-
-  double get totalCost {
-    double cost = 0.0;
-    for (var selectedProduct in selectedProducts) {
-      cost = cost + selectedProduct.price;
-    }
-    return cost;
-  }
-
   @override
   void dispose() {
     contactNameController.dispose();
     super.dispose();
-
     contactNumberController.dispose();
     super.dispose();
-
     contactEmailController.dispose();
     super.dispose();
   }
@@ -270,19 +197,22 @@ class _PageNewClientState extends State<PageNewClient> {
                   ),
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Padding(
-                          padding: EdgeInsets.only(
+                          padding: const EdgeInsets.only(
                             left: 10,
                             right: 10,
                           ),
                           child: TextField(
-                            decoration: InputDecoration(),
+                            controller: addContactNameController,
+                            decoration: const InputDecoration(),
                           ),
                         ),
                       ),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          selectContact();
+                        },
                         icon: const Icon(
                           Icons.person_add_alt_1,
                           color: Colors.blue,
@@ -310,14 +240,15 @@ class _PageNewClientState extends State<PageNewClient> {
                   ),
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Padding(
-                          padding: EdgeInsets.only(
+                          padding: const EdgeInsets.only(
                             left: 10,
                             right: 10,
                           ),
                           child: TextField(
-                            decoration: InputDecoration(),
+                            controller: addContactNumberController,
+                            decoration: const InputDecoration(),
                           ),
                         ),
                       ),
@@ -340,10 +271,9 @@ class _PageNewClientState extends State<PageNewClient> {
                       ),
                     ],
                   ),
-                  //
+
                   //follow up date/time
 
-                  ///
                   const SizedBox(
                     height: 15,
                   ),
@@ -402,8 +332,6 @@ class _PageNewClientState extends State<PageNewClient> {
                     ],
                   ),
 
-                  //
-
                   //location
 
                   const SizedBox(
@@ -415,19 +343,23 @@ class _PageNewClientState extends State<PageNewClient> {
                   ),
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Padding(
-                          padding: EdgeInsets.only(
+                          padding: const EdgeInsets.only(
                             left: 10,
                             right: 10,
                           ),
+                          // child: Text(currentAddress)
                           child: TextField(
-                            decoration: InputDecoration(),
+                            controller: locationController,
+                            decoration: const InputDecoration(),
                           ),
                         ),
                       ),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          determinePosition();
+                        },
                         icon: const Icon(
                           Icons.location_on,
                           color: Colors.blue,
@@ -489,23 +421,24 @@ class _PageNewClientState extends State<PageNewClient> {
 
                       Expanded(
                         child: Padding(
-                            padding: const EdgeInsets.only(
-                              left: 5,
-                              right: 10,
-                            ),
-                            child: DropdownButtonFormField(
-                              items: routes
-                                  .map((e) => DropdownMenuItem(
-                                        value: e,
-                                        child: Text(e),
-                                      ))
-                                  .toList(),
-                              onChanged: (val) {
-                                setState(() {
-                                  selectedRoute = val as String;
-                                });
-                              },
-                            )),
+                          padding: const EdgeInsets.only(
+                            left: 5,
+                            right: 10,
+                          ),
+                          child: DropdownButtonFormField(
+                            items: routes
+                                .map((e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e),
+                                    ))
+                                .toList(),
+                            onChanged: (val) {
+                              setState(() {
+                                selectedRoute = val as String;
+                              });
+                            },
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -793,49 +726,14 @@ class _PageNewClientState extends State<PageNewClient> {
                 ),
               ),
               const Row(
-                children: [
-                  // Container(
-                  //   child: Column(
-                  //     children: [
-                  //       Text('Search Product Name...'),
-
-                  //     ],
-                  //   ),
-                  // )
-                  // Expanded(
-                  //   child: Padding(
-                  //     padding: const EdgeInsets.only(
-                  //       left: 25,
-                  //       right: 25,
-                  //     ),
-                  //     child: TextFormField(
-                  //       onChanged: (value) {
-                  //         // filterProducts(value);
-                  //       },
-                  //       decoration: InputDecoration(
-                  //         suffixIcon: const Icon(Icons.search),
-                  //         label: Center(
-                  //           child: Text(
-                  //             'Search Product Name....',
-                  //             style: TextStyle(
-                  //               color: Colors.grey.shade600,
-                  //               fontSize: 18,
-                  //               fontWeight: FontWeight.w500,
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                ],
+                children: [],
               ),
 
               const SizedBox(
                 height: 20,
               ),
 
-              // table
+              // table of add contact
 
               selectedProducts.isEmpty
                   ? Container(
@@ -900,13 +798,33 @@ class _PageNewClientState extends State<PageNewClient> {
                               (index) => TableRow(
                                 children: [
                                   TableCell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        textAlign: TextAlign.center,
-                                        selectedProducts[index].title,
-                                        style: const TextStyle(
-                                          color: Colors.black,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        productNameController.text =
+                                            selectedProducts[index].title;
+                                        productRateController.text =
+                                            selectedProducts[index]
+                                                .originalPrice
+                                                .toString();
+                                        productQtyController.text =
+                                            selectedProducts[index]
+                                                .qty
+                                                .toString();
+                                        productTotalController.text =
+                                            selectedProducts[index]
+                                                .price
+                                                .toString();
+
+                                        openTaxDialog(selectedProducts[index]);
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          textAlign: TextAlign.center,
+                                          selectedProducts[index].title,
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -957,8 +875,6 @@ class _PageNewClientState extends State<PageNewClient> {
                                             },
                                             //
 
-                                            //
-
                                             child: Container(
                                                 child: const Icon(
                                                     Icons.chevron_right)),
@@ -988,9 +904,13 @@ class _PageNewClientState extends State<PageNewClient> {
                         ),
                       ),
                     ),
+
               const SizedBox(
                 height: 20,
               ),
+
+              //
+
               selectedProducts.isEmpty
                   ? Container(
                       color: Colors.transparent,
@@ -1260,6 +1180,7 @@ class _PageNewClientState extends State<PageNewClient> {
                                 onTap: () {
                                   setState(() {
                                     copyProductContent(data);
+                                    // openTaxDialog(data);
                                   });
 
                                   Navigator.pop(context);
@@ -1293,6 +1214,412 @@ class _PageNewClientState extends State<PageNewClient> {
           actions: [
             GestureDetector(
               onTap: () => Navigator.pop(context),
+              child: const Text(
+                'Close',
+              ),
+            ),
+          ],
+        ),
+      );
+
+  void addItemToList() {
+    String contactName = contactNameController.text;
+    contactNameController.clear();
+
+    String contactNumber = contactNumberController.text;
+    contactNumberController.clear();
+
+    String contactEmail = contactEmailController.text;
+    contactEmailController.clear();
+
+    selectedContactType = selectedContactType.toString();
+
+    setState(() {
+      contacts.add(ContactModel(
+          contactName, contactNumber, contactEmail, selectedContactType));
+    });
+  }
+
+  void copyProductContent(Product product) {
+    bool isExistingProduct = false;
+
+    for (var selectedProduct in selectedProducts) {
+      if (selectedProduct.title == product.title) {
+        double originalPrice = product.price;
+        // Product already exists in selectedProducts list
+        isExistingProduct = true;
+        selectedProduct.qty += 1;
+        selectedProduct.price = originalPrice * selectedProduct.qty;
+      }
+    }
+
+    if (!isExistingProduct) {
+      // Product does not exist in selectedProducts list
+      SelectedProducts copiedProduct = SelectedProducts(
+        title: product.title,
+        stock: product.stock,
+        price: product.price,
+        qty: 1,
+        originalPrice: product.price,
+      );
+      selectedProducts.add(copiedProduct);
+    }
+  }
+
+  void increseProductCount(Product product) {
+    for (var selectedProduct in selectedProducts) {
+      if (selectedProduct.title == product.title) {
+        selectedProduct.qty += 1;
+        selectedProduct.price =
+            selectedProduct.originalPrice * selectedProduct.qty;
+      }
+    }
+  }
+
+  void decrementProductQuantity(int index) {
+    setState(() {
+      if (selectedProducts[index].qty > 1) {
+        selectedProducts[index].qty = selectedProducts[index].qty - 1;
+
+        selectedProducts[index].price =
+            selectedProducts[index].originalPrice * selectedProducts[index].qty;
+      } else {
+        selectedProducts.removeAt(index);
+      }
+    });
+  }
+
+  void incrementProductQuantity(int index) {
+    setState(() {
+      selectedProducts[index].qty = selectedProducts[index].qty + 1;
+      selectedProducts[index].price =
+          selectedProducts[index].originalPrice * selectedProducts[index].qty;
+    });
+  }
+
+  double get totalCost {
+    double cost = 0.0;
+    for (var selectedProduct in selectedProducts) {
+      cost = cost + selectedProduct.price;
+    }
+    return cost;
+  }
+
+  Future<Position> determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      Fluttertoast.showToast(msg: 'Turn on the location.');
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        Fluttertoast.showToast(msg: 'Permission denied.');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      Fluttertoast.showToast(msg: 'Permission denied forever.');
+    }
+    Position? position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    try {
+      List<Placemark> placemark =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+      Placemark place = placemark[0];
+      setState(() {
+        currentPosition = position;
+        currentAddress =
+            "${place.street}, ${place.name}, ${place.locality}, ${place.postalCode}, ${place.country}.";
+        locationController.text = currentAddress;
+      });
+    } catch (e) {
+      Fluttertoast.showToast(msg: '');
+    }
+    return position;
+  }
+
+  void selectContact() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ContactsPage()),
+    );
+
+    if (result != null && result is Contact) {
+      setState(() {
+        selectedContact = result;
+        addContactNameController.text = selectedContact!.givenName!;
+        addContactNumberController.text = selectedContact!.phones![0].value!;
+      });
+    }
+  }
+
+  Future openTaxDialog(SelectedProducts selectedProducts) => showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          // ignore: sized_box_for_whitespace
+          content: Container(
+            width: 300,
+            height: 400,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Product Name'),
+
+                TextFormField(
+                  controller: productNameController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text('Rate'),
+                    Text('Qty'),
+                    Text('Total'),
+                  ],
+                ),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: productRateController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (selectedProducts.qty > 1) {
+                                  selectedProducts.qty =
+                                      selectedProducts.qty - 1;
+
+                                  selectedProducts.price =
+                                      selectedProducts.originalPrice *
+                                          selectedProducts.qty;
+
+                                  // selectedProducts.price =
+                                  //     selectedProducts.originalPrice *
+                                  //         selectedProducts.qty;
+                                } else {
+                                  selectedProducts.qty = 1;
+                                }
+                              });
+                            },
+                            //
+
+                            //
+
+                            child: Container(
+                              child: const Icon(Icons.chevron_left),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              right: 10,
+                              left: 10,
+                            ),
+                            child: Text(
+                              selectedProducts.qty.toString(),
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              // incrementProductQuantity(index);
+
+                              setState(() {
+                                selectedProducts.qty = selectedProducts.qty + 1;
+
+                                selectedProducts.price =
+                                    selectedProducts.originalPrice *
+                                        selectedProducts.qty;
+
+                                // selectedProducts.price =
+                                //     selectedProducts.originalPrice *
+                                //         selectedProducts.qty;
+
+                                print(productTaxController.text);
+                              });
+                            },
+                            //
+
+                            child: Container(
+                                child: const Icon(Icons.chevron_right)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: TextFormField(
+                        controller: productTotalController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text('Tax (%)'),
+                    Text('Tax Amount'),
+                    Text('Tax Include'),
+                  ],
+                ),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField(
+                        value: selectedTaxPercentage,
+                        items: taxPercentage
+                            .map((e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(e),
+                                ))
+                            .toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            selectedTaxPercentage = val as String;
+                            if (selectedTaxInclude == 'Yes') {
+                              print(selectedTaxPercentage);
+                              if (selectedTaxPercentage == '0') {
+                                selectedProducts.price =
+                                    selectedProducts.price +
+                                        (selectedProducts.price * (0 / 100));
+                                productTaxController.text =
+                                    (selectedProducts.price * (0 / 100))
+                                        as String;
+
+                                print(selectedProducts.price);
+                              }
+                              if (selectedTaxPercentage == '18') {
+                                selectedProducts.price =
+                                    selectedProducts.price +
+                                        (selectedProducts.price * (18 / 100));
+                                productTaxController.text =
+                                    (selectedProducts.price * (18 / 100))
+                                        as String;
+                                print(selectedProducts.price);
+                              }
+                              if (selectedTaxPercentage == '5') {
+                                selectedProducts.price =
+                                    selectedProducts.price +
+                                        (selectedProducts.price * (5 / 100));
+                                productTaxController.text =
+                                    (selectedProducts.price * (5 / 100))
+                                        as String;
+                                print(selectedProducts.price);
+                              }
+                              if (selectedTaxPercentage == '12') {
+                                selectedProducts.price =
+                                    selectedProducts.price +
+                                        (selectedProducts.price * (12 / 100));
+                                productTaxController.text =
+                                    (selectedProducts.price * (12 / 100))
+                                        as String;
+                                print(selectedProducts.price);
+                              }
+                              if (selectedTaxPercentage == '19') {
+                                selectedProducts.price =
+                                    selectedProducts.price +
+                                        (selectedProducts.price * (19 / 100));
+                                productTaxController.text =
+                                    (selectedProducts.price * (19 / 100))
+                                        as String;
+
+                                print(productTaxController.text);
+                              }
+                            }
+                            // else {
+                            //   selectedProducts.price =
+                            //       selectedProducts.originalPrice *
+                            //           selectedProducts.qty;
+                            // }
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Expanded(
+                      child: TextFormField(
+                        controller: productTaxController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Expanded(
+                      child: DropdownButtonFormField(
+                        value: selectedTaxInclude,
+                        items: taxInclude
+                            .map((e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(e),
+                                ))
+                            .toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            selectedTaxInclude = val as String;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Text(product.title),
+              ],
+            ),
+          ),
+          actions: [
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                selectedTaxInclude = 'No';
+                selectedTaxPercentage = '0';
+              },
               child: const Text(
                 'Close',
               ),

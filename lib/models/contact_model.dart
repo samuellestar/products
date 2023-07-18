@@ -1,8 +1,8 @@
-class Contact {
+class ContactModel {
   String name;
   String number;
   String email;
   dynamic type;
 
-  Contact(this.name, this.number, this.email, this.type);
+  ContactModel(this.name, this.number, this.email, this.type);
 }
