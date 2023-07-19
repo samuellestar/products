@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:forms/components/linear_gradient.dart';
 import 'package:forms/models/location_model.dart';
+import 'package:forms/screens/map_screen.dart';
 import 'package:forms/screens/new_client_page.dart';
 import 'package:forms/screens/product_list.dart';
 import 'package:forms/screens/splash_screen.dart';
@@ -21,6 +22,8 @@ class _HomePageState extends State<HomePage> {
   LocationModel? foundLocation;
 
   final locationSearchController = TextEditingController();
+  final locationLongController = TextEditingController();
+  final locationLatController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +70,9 @@ class _HomePageState extends State<HomePage> {
           ),
           GestureDetector(
             onTap: () {
+              locationLatController.clear();
+              locationLongController.clear();
+              locationSearchController.clear();
               showLocationListDialog();
             },
             child: const Padding(
@@ -201,68 +207,102 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-            content: Container(
-              height: 300,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      hintText: 'Locations',
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          content: Container(
+            height: 300,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                TextFormField(
+                  controller: locationSearchController,
+                  decoration: const InputDecoration(
+                    labelText: 'Locations',
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: locationLatController,
+                        decoration: const InputDecoration(
+                          labelText: 'Latitude',
+                        ),
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: locationSearchController,
-                          decoration: const InputDecoration(
-                            hintText: 'Latitude',
-                          ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Expanded(
+                      child: TextFormField(
+                        controller: locationLongController,
+                        decoration: const InputDecoration(
+                          labelText: 'Longitude',
                         ),
                       ),
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      Expanded(
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            hintText: 'Longitude',
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (locationSearchController.text.isNotEmpty) {
                           searchLocation(locationSearchController.text);
-                        },
-                        child: const Icon(
-                          Icons.location_on,
-                          color: Colors.blue,
-                        ),
-                      )
-                    ],
+                        } else {}
+                        // searchLocation(locationSearchController.text);
+                      },
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Colors.blue,
+                      ),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Align(
+              alignment: Alignment.center,
+              child: GestureDetector(
+                onTap: () {},
+                child: Text(
+                  'Show in map',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
-                ],
+                ),
               ),
-            ));
+            )
+          ],
+        );
       },
     );
   }
 
   void searchLocation(String locationName) {
-    print('enterd function');
     setState(() {
       foundLocation = locations.firstWhere(
         (location) => location.name.toLowerCase() == locationName.toLowerCase(),
       );
-      print(foundLocation!.lat.toString());
-      print(foundLocation!.long.toString());
+
+      locationLongController.text = foundLocation!.long.toString();
+      locationLatController.text = foundLocation!.lat.toString();
     });
   }
+
+  // void openMap() {
+  //   if (foundLocation != null) {
+  //     Navigator.of(context).push(
+  //       MaterialPageRoute(
+  //         builder: (context) => MapScreen(
+  //           latitude: double.parse(foundLocation!.lat),
+  //           longitude: double.parse(foundLocation!.long),
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
 }
