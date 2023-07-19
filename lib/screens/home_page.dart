@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:forms/components/linear_gradient.dart';
 import 'package:forms/models/location_model.dart';
-import 'package:forms/screens/map_screen.dart';
 import 'package:forms/screens/new_client_page.dart';
 import 'package:forms/screens/product_list.dart';
 import 'package:forms/screens/splash_screen.dart';
