@@ -1,12 +1,26 @@
+// ignore_for_file: sized_box_for_whitespace, prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:forms/components/linear_gradient.dart';
+import 'package:forms/models/location_model.dart';
 import 'package:forms/screens/new_client_page.dart';
 import 'package:forms/screens/product_list.dart';
 import 'package:forms/screens/splash_screen.dart';
+import 'package:forms/utils/locations_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String searchedLocation = '';
+  LocationModel? foundLocation;
+
+  final locationSearchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +64,19 @@ class HomePage extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-          )
+          ),
+          GestureDetector(
+            onTap: () {
+              showLocationListDialog();
+            },
+            child: const Padding(
+              padding: EdgeInsets.only(right: 15),
+              child: Icon(
+                Icons.location_on,
+                color: Colors.white,
+              ),
+            ),
+          ),
         ],
         elevation: 3,
       ),
@@ -168,5 +194,75 @@ class HomePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void showLocationListDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            content: Container(
+              height: 300,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      hintText: 'Locations',
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: locationSearchController,
+                          decoration: const InputDecoration(
+                            hintText: 'Latitude',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          decoration: const InputDecoration(
+                            hintText: 'Longitude',
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          searchLocation(locationSearchController.text);
+                        },
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.blue,
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ));
+      },
+    );
+  }
+
+  void searchLocation(String locationName) {
+    print('enterd function');
+    setState(() {
+      foundLocation = locations.firstWhere(
+        (location) => location.name.toLowerCase() == locationName.toLowerCase(),
+      );
+      print(foundLocation!.lat.toString());
+      print(foundLocation!.long.toString());
+    });
   }
 }

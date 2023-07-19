@@ -10,7 +10,7 @@ class PageProductList extends StatefulWidget {
 }
 
 class _PageProductListState extends State<PageProductList> {
-  late Future<List<Product>> productList;
+  late Future<List<ProductModel>> productList;
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _PageProductListState extends State<PageProductList> {
         ),
         elevation: 3,
       ),
-      body: FutureBuilder<List<Product>>(
+      body: FutureBuilder<List<ProductModel>>(
         future: productList,
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
@@ -48,7 +48,7 @@ class _PageProductListState extends State<PageProductList> {
               return ListView.builder(
                 itemCount: snapshot.data.length,
                 itemBuilder: (context, index) {
-                  Product data = snapshot.data[index];
+                  ProductModel data = snapshot.data[index];
                   return ListTile(
                     title: Text(data.title),
                     trailing: Text('₹${data.price}'),

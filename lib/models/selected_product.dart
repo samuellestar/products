@@ -1,11 +1,11 @@
-class SelectedProducts {
+class SelectedProductsModel {
   final String title;
   final int stock;
   double price;
   final double originalPrice;
   int qty;
 
-  SelectedProducts({
+  SelectedProductsModel({
     required this.title,
     required this.stock,
     required this.price,
@@ -15,5 +15,5 @@ class SelectedProducts {
 
   where(bool Function(dynamic product) param0) {}
 
-  void add(SelectedProducts copiedProduct) {}
+  void add(SelectedProductsModel copiedProduct) {}
 }

@@ -10,9 +10,9 @@ class SerachProductDialog extends StatefulWidget {
 }
 
 class _SerachProductDialogState extends State<SerachProductDialog> {
-  late Future<List<Product>> productList = fetchData();
+  late Future<List<ProductModel>> productList = fetchData();
 
-  late Future<List<Product>> searchList;
+  late Future<List<ProductModel>> searchList;
 
   @override
   void initState() {
@@ -48,7 +48,7 @@ class _SerachProductDialogState extends State<SerachProductDialog> {
               height: 10,
             ),
             Expanded(
-              child: FutureBuilder<List<Product>>(
+              child: FutureBuilder<List<ProductModel>>(
                 future: searchList,
                 builder: (BuildContext context, AsyncSnapshot snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
@@ -56,9 +56,9 @@ class _SerachProductDialogState extends State<SerachProductDialog> {
                       return ListView.builder(
                         itemCount: snapshot.data.length,
                         itemBuilder: (context, index) {
-                          Product data = snapshot.data[index];
+                          ProductModel data = snapshot.data[index];
                           return GestureDetector(
-                            onTap: (){},
+                            onTap: () {},
                             child: Card(
                               child: ListTile(
                                 title: Text(data.title),

@@ -1,15 +1,15 @@
-class Product {
+class ProductModel {
   final String title;
   final int stock;
   final double price;
 
-  const Product({
+  const ProductModel({
     required this.title,
     required this.stock,
     required this.price,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) => Product(
+  factory ProductModel.fromJson(Map<String, dynamic> json) => ProductModel(
         title: json['title'] ?? "",
         stock: json['stock'] ?? 0,
         price: json['price'] == null

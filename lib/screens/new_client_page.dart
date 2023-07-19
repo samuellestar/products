@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_unnecessary_containers, avoid_print
+// ignore_for_file: avoid_unnecessary_containers,
 
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
@@ -26,11 +26,11 @@ class PageNewClient extends StatefulWidget {
 }
 
 class _PageNewClientState extends State<PageNewClient> {
-  late Future<List<Product>> productList;
+  late Future<List<ProductModel>> productList;
   Contact? selectedContact;
 
   List<ContactModel> contacts = [];
-  List<SelectedProducts> selectedProducts = [];
+  List<SelectedProductsModel> selectedProducts = [];
 
   String currentAddress = 'My Address';
   late Position currentPosition;
@@ -48,6 +48,8 @@ class _PageNewClientState extends State<PageNewClient> {
   final productQtyController = TextEditingController();
   final productTotalController = TextEditingController();
   final productTaxController = TextEditingController();
+  final taxQtyController = TextEditingController();
+  final totalCostIncludExcludeController = TextEditingController();
 
   final type = ['End User', 'one', 'two'];
   final assignedUser = ['sajith', 'samuel', 'helen'];
@@ -815,7 +817,21 @@ class _PageNewClientState extends State<PageNewClient> {
                                                 .price
                                                 .toString();
 
-                                        openTaxDialog(selectedProducts[index]);
+                                        taxQtyController.text =
+                                            selectedProducts[index]
+                                                .qty
+                                                .toString();
+
+                                        selectedTaxInclude = 'No';
+                                        selectedTaxPercentage = '0';
+
+                                        productTaxController.text = '';
+                                        totalCostIncludExcludeController.text =
+                                            selectedProducts[index]
+                                                .price
+                                                .toString();
+
+                                        openTaxDialog(index);
                                       },
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
@@ -1167,7 +1183,7 @@ class _PageNewClientState extends State<PageNewClient> {
                   height: 10,
                 ),
                 Expanded(
-                  child: FutureBuilder<List<Product>>(
+                  child: FutureBuilder<List<ProductModel>>(
                     future: productList,
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
@@ -1175,7 +1191,7 @@ class _PageNewClientState extends State<PageNewClient> {
                           return ListView.builder(
                             itemCount: snapshot.data.length,
                             itemBuilder: (context, index) {
-                              Product data = snapshot.data[index];
+                              ProductModel data = snapshot.data[index];
                               return GestureDetector(
                                 onTap: () {
                                   setState(() {
@@ -1240,7 +1256,7 @@ class _PageNewClientState extends State<PageNewClient> {
     });
   }
 
-  void copyProductContent(Product product) {
+  void copyProductContent(ProductModel product) {
     bool isExistingProduct = false;
 
     for (var selectedProduct in selectedProducts) {
@@ -1255,7 +1271,7 @@ class _PageNewClientState extends State<PageNewClient> {
 
     if (!isExistingProduct) {
       // Product does not exist in selectedProducts list
-      SelectedProducts copiedProduct = SelectedProducts(
+      SelectedProductsModel copiedProduct = SelectedProductsModel(
         title: product.title,
         stock: product.stock,
         price: product.price,
@@ -1266,7 +1282,7 @@ class _PageNewClientState extends State<PageNewClient> {
     }
   }
 
-  void increseProductCount(Product product) {
+  void increseProductCount(ProductModel product) {
     for (var selectedProduct in selectedProducts) {
       if (selectedProduct.title == product.title) {
         selectedProduct.qty += 1;
@@ -1357,7 +1373,7 @@ class _PageNewClientState extends State<PageNewClient> {
     }
   }
 
-  Future openTaxDialog(SelectedProducts selectedProducts) => showDialog(
+  Future openTaxDialog(int index) => showDialog(
         context: context,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
@@ -1365,266 +1381,286 @@ class _PageNewClientState extends State<PageNewClient> {
           content: Container(
             width: 300,
             height: 400,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Product Name'),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Product Name'),
 
-                TextFormField(
-                  controller: productNameController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5),
+                  TextFormField(
+                    controller: productNameController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
+                  const SizedBox(
+                    height: 20,
+                  ),
 
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text('Rate'),
-                    Text('Qty'),
-                    Text('Total'),
-                  ],
-                ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Text('Rate'),
+                      Text('Qty'),
+                      Text('Total'),
+                    ],
+                  ),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: productRateController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: productRateController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (selectedProducts.qty > 1) {
-                                  selectedProducts.qty =
-                                      selectedProducts.qty - 1;
-
-                                  selectedProducts.price =
-                                      selectedProducts.originalPrice *
-                                          selectedProducts.qty;
-
-                                  // selectedProducts.price =
-                                  //     selectedProducts.originalPrice *
-                                  //         selectedProducts.qty;
-                                } else {
-                                  selectedProducts.qty = 1;
-                                }
-                              });
-                            },
-                            //
-
-                            //
-
-                            child: Container(
-                              child: const Icon(Icons.chevron_left),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              right: 10,
-                              left: 10,
-                            ),
-                            child: Text(
-                              selectedProducts.qty.toString(),
-                              style: const TextStyle(
-                                color: Colors.black,
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                int quantity = selectedProducts[index].qty;
+                                calculateTotalRateOnDecrementInDialog(
+                                    index, quantity);
+                              },
+                              child: Container(
+                                child: const Icon(Icons.chevron_left),
                               ),
                             ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              // incrementProductQuantity(index);
-
-                              setState(() {
-                                selectedProducts.qty = selectedProducts.qty + 1;
-
-                                selectedProducts.price =
-                                    selectedProducts.originalPrice *
-                                        selectedProducts.qty;
-
-                                // selectedProducts.price =
-                                //     selectedProducts.originalPrice *
-                                //         selectedProducts.qty;
-
-                                print(productTaxController.text);
-                              });
-                            },
-                            //
-
-                            child: Container(
-                                child: const Icon(Icons.chevron_right)),
-                          ),
-                        ],
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  right: 10,
+                                  left: 10,
+                                ),
+                                child: TextFormField(
+                                  controller: taxQtyController,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                calculateTotalRateOnIncrementInDialog(
+                                    index, selectedProducts[index].qty);
+                              },
+                              child: Container(
+                                  child: const Icon(Icons.chevron_right)),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: TextFormField(
-                        controller: productTotalController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
+                      Expanded(
+                        child: TextFormField(
+                          controller: productTotalController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
 
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text('Tax (%)'),
-                    Text('Tax Amount'),
-                    Text('Tax Include'),
-                  ],
-                ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Text('Tax (%)'),
+                      Text('Tax Amount'),
+                      Text('Tax Include'),
+                    ],
+                  ),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField(
-                        value: selectedTaxPercentage,
-                        items: taxPercentage
-                            .map((e) => DropdownMenuItem(
-                                  value: e,
-                                  child: Text(e),
-                                ))
-                            .toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            selectedTaxPercentage = val as String;
-                            if (selectedTaxInclude == 'Yes') {
-                              print(selectedTaxPercentage);
-                              if (selectedTaxPercentage == '0') {
-                                selectedProducts.price =
-                                    selectedProducts.price +
-                                        (selectedProducts.price * (0 / 100));
-                                productTaxController.text =
-                                    (selectedProducts.price * (0 / 100))
-                                        as String;
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField(
+                          value: selectedTaxPercentage,
+                          items: taxPercentage
+                              .map((e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ))
+                              .toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              selectedTaxPercentage = val as String;
 
-                                print(selectedProducts.price);
-                              }
-                              if (selectedTaxPercentage == '18') {
-                                selectedProducts.price =
-                                    selectedProducts.price +
-                                        (selectedProducts.price * (18 / 100));
-                                productTaxController.text =
-                                    (selectedProducts.price * (18 / 100))
-                                        as String;
-                                print(selectedProducts.price);
-                              }
-                              if (selectedTaxPercentage == '5') {
-                                selectedProducts.price =
-                                    selectedProducts.price +
-                                        (selectedProducts.price * (5 / 100));
-                                productTaxController.text =
-                                    (selectedProducts.price * (5 / 100))
-                                        as String;
-                                print(selectedProducts.price);
-                              }
-                              if (selectedTaxPercentage == '12') {
-                                selectedProducts.price =
-                                    selectedProducts.price +
-                                        (selectedProducts.price * (12 / 100));
-                                productTaxController.text =
-                                    (selectedProducts.price * (12 / 100))
-                                        as String;
-                                print(selectedProducts.price);
-                              }
-                              if (selectedTaxPercentage == '19') {
-                                selectedProducts.price =
-                                    selectedProducts.price +
-                                        (selectedProducts.price * (19 / 100));
-                                productTaxController.text =
-                                    (selectedProducts.price * (19 / 100))
-                                        as String;
-
-                                print(productTaxController.text);
-                              }
-                            }
-                            // else {
-                            //   selectedProducts.price =
-                            //       selectedProducts.originalPrice *
-                            //           selectedProducts.qty;
-                            // }
-                          });
-                        },
+                              calculateTaxAmount();
+                              isTaxInclude(index);
+                            });
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Expanded(
-                      child: TextFormField(
-                        controller: productTaxController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          controller: productTaxController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Expanded(
-                      child: DropdownButtonFormField(
-                        value: selectedTaxInclude,
-                        items: taxInclude
-                            .map((e) => DropdownMenuItem(
-                                  value: e,
-                                  child: Text(e),
-                                ))
-                            .toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            selectedTaxInclude = val as String;
-                          });
-                        },
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Expanded(
+                        child: DropdownButtonFormField(
+                          value: selectedTaxInclude,
+                          items: taxInclude
+                              .map((e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ))
+                              .toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              selectedTaxInclude = val as String;
+                              isTaxInclude(index);
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text('Total Cost'),
+
+                  TextFormField(
+                    controller: totalCostIncludExcludeController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
 
-                // Text(product.title),
-              ],
+                  // Text(product.title),
+                ],
+              ),
             ),
           ),
           actions: [
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-                selectedTaxInclude = 'No';
-                selectedTaxPercentage = '0';
-              },
-              child: const Text(
-                'Close',
+            Align(
+              alignment: Alignment.center,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedProducts[index].price =
+                        double.parse(totalCostIncludExcludeController.text);
+                    Navigator.pop(context);
+                  });
+                },
+                child: const Text(
+                  'ADD',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
               ),
-            ),
+            )
           ],
         ),
       );
+
+  void calculateTotalRateOnIncrementInDialog(int index, int qty) {
+    int quantity = int.parse(taxQtyController.text);
+
+    setState(() {
+      double totalCost = selectedProducts[index].originalPrice * (quantity + 1);
+      productTotalController.text = totalCost.toString();
+      totalCostIncludExcludeController.text = totalCost.toString();
+      taxQtyController.text = (quantity + 1).toString();
+    });
+  }
+
+  void calculateTotalRateOnDecrementInDialog(int index, int qty) {
+    int quantity = int.parse(taxQtyController.text);
+    setState(() {
+      double totalCost = selectedProducts[index].originalPrice * (quantity - 1);
+      productTotalController.text = totalCost.toString();
+      totalCostIncludExcludeController.text = totalCost.toString();
+      taxQtyController.text = (quantity - 1).toString();
+    });
+  }
+
+  void calculateTaxAmount() {
+    if (selectedTaxPercentage == '0') {
+      setState(() {
+        productTaxController.text = '0';
+      });
+    }
+    if (selectedTaxPercentage == '5') {
+      setState(() {
+        int taxPercercentage = 5;
+        double productAmount = double.parse(productTotalController.text);
+
+        double taxAmount = productAmount * (taxPercercentage / 100);
+        productTaxController.text = taxAmount.toString();
+      });
+    }
+    if (selectedTaxPercentage == '12') {
+      setState(() {
+        int taxPercercentage = 12;
+        double productAmount = double.parse(productTotalController.text);
+
+        double taxAmount = productAmount * (taxPercercentage / 100);
+        productTaxController.text = taxAmount.toString();
+      });
+    }
+    if (selectedTaxPercentage == '18') {
+      setState(() {
+        int taxPercercentage = 18;
+        double productAmount = double.parse(productTotalController.text);
+
+        double taxAmount = productAmount * (taxPercercentage / 100);
+        productTaxController.text = taxAmount.toString();
+      });
+    }
+    if (selectedTaxPercentage == '19') {
+      setState(() {
+        int taxPercercentage = 19;
+        double productAmount = double.parse(productTotalController.text);
+
+        double taxAmount = productAmount * (taxPercercentage / 100);
+        productTaxController.text = taxAmount.toString();
+      });
+    }
+  }
+
+  void isTaxInclude(int index) {
+    if (selectedTaxInclude == 'Yes') {
+      double totalCost = double.parse(productTotalController.text) +
+          double.parse(productTaxController.text);
+      totalCostIncludExcludeController.text = totalCost.toString();
+    } else {
+      totalCostIncludExcludeController.text = productTotalController.text;
+    }
+  }
 }
