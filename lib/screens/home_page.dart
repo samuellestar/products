@@ -3,11 +3,15 @@
 import 'package:flutter/material.dart';
 import 'package:forms/components/linear_gradient.dart';
 import 'package:forms/models/location_model.dart';
+import 'package:forms/screens/map_screen.dart';
 import 'package:forms/screens/new_client_page.dart';
 import 'package:forms/screens/product_list.dart';
 import 'package:forms/screens/splash_screen.dart';
 import 'package:forms/utils/locations_list.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:label_marker/label_marker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +23,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String searchedLocation = '';
   LocationModel? foundLocation;
+  GoogleMapController? mapController;
+  Set<Marker> markers = {};
 
   final locationSearchController = TextEditingController();
   final locationLongController = TextEditingController();
@@ -69,10 +75,18 @@ class _HomePageState extends State<HomePage> {
           ),
           GestureDetector(
             onTap: () {
-              locationLatController.clear();
-              locationLongController.clear();
-              locationSearchController.clear();
-              showLocationListDialog();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MapScreen(),
+                ),
+              );
+              // openMap();
+              // locationLatController.clear();
+              // locationLongController.clear();
+              // locationSearchController.clear();
+              // foundLocation = null;
+              // showLocationListDialog(context);
             },
             child: const Padding(
               padding: EdgeInsets.only(right: 15),
@@ -195,113 +209,179 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+            // Expanded(
+            //   child: GoogleMap(
+            //     onMapCreated: (GoogleMapController controller) {
+            //       mapController = controller;
+            //     },
+            //     markers: markers,
+            //     initialCameraPosition: CameraPosition(
+            //       target: LatLng(0.0, 0.0),
+            //       zoom: 1.0,
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
     );
   }
 
-  void showLocationListDialog() {
+  void showLocationListDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          content: Container(
-            height: 300,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                TextFormField(
-                  controller: locationSearchController,
-                  decoration: const InputDecoration(
-                    labelText: 'Locations',
-                  ),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: locationLatController,
-                        decoration: const InputDecoration(
-                          labelText: 'Latitude',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 5,
-                    ),
-                    Expanded(
-                      child: TextFormField(
-                        controller: locationLongController,
-                        decoration: const InputDecoration(
-                          labelText: 'Longitude',
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        if (locationSearchController.text.isNotEmpty) {
-                          searchLocation(locationSearchController.text);
-                        } else {}
-                        // searchLocation(locationSearchController.text);
-                      },
-                      child: const Icon(
-                        Icons.location_on,
-                        color: Colors.blue,
-                      ),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            Align(
-              alignment: Alignment.center,
-              child: GestureDetector(
-                onTap: () {},
-                child: Text(
-                  'Show in map',
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-            )
-          ],
-        );
+        return buildAlertDialogWithList(context);
       },
     );
   }
 
-  void searchLocation(String locationName) {
-    setState(() {
-      foundLocation = locations.firstWhere(
-        (location) => location.name.toLowerCase() == locationName.toLowerCase(),
-      );
-
-      locationLongController.text = foundLocation!.long.toString();
-      locationLatController.text = foundLocation!.lat.toString();
-    });
+  AlertDialog buildAlertDialogWithList(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+      title: Text('Locations'),
+      content: Container(
+        height: 300,
+        width: 300,
+        child: ListView.builder(
+          itemCount: locations.length,
+          itemBuilder: (context, index) {
+            return Card(
+              child: ListTile(
+                title: GestureDetector(
+                  onTap: () {
+                    print(locations[index].lat.toString());
+                    print(locations[index].long.toString());
+                    print(locations[index].name.toString());
+                    openMap(
+                        // locations[index].lat.toString(),
+                        // locations[index].long.toString(),
+                        // locations[index].name.toString(),
+                        );
+                  },
+                  child: Text(
+                    locations[index].name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                subtitle: GestureDetector(
+                  onTap: () {
+                    print(locations[index].lat.toString());
+                    print(locations[index].long.toString());
+                    print(locations[index].name.toString());
+                    openMap(
+                        // locations[index].lat.toString(),
+                        // locations[index].long.toString(),
+                        // locations[index].name.toString(),
+                        );
+                  },
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Latitude: ${locations[index].lat}'),
+                      Text('Longitude: ${locations[index].long}'),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context); // Close the dialog
+          },
+          child: Text('Close'),
+        ),
+      ],
+    );
   }
 
-  // void openMap() {
-  //   if (foundLocation != null) {
-  //     Navigator.of(context).push(
-  //       MaterialPageRoute(
-  //         builder: (context) => MapScreen(
-  //           latitude: double.parse(foundLocation!.lat),
-  //           longitude: double.parse(foundLocation!.long),
-  //         ),
-  //       ),
-  //     );
+//label_marker: ^1.0.1
+
+  Future<void> openMap() async {
+    final Uri googleMapsUrl =
+        Uri.parse('https://www.google.com/maps/search/?api=1&query=');
+
+    addMarkers();
+    print('Markers: ${markers}');
+
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl);
+    } else {
+      throw 'Could not launch $googleMapsUrl';
+    }
+  }
+
+  void addMarkers() {
+    print('locations length ${locations.length}');
+    for (int i = 0; i < locations.length; i++) {
+      print('Location [${i}]: ${locations[i].toString()}');
+      var location = locations[i];
+      print(location.lat);
+      markers.add(
+        Marker(
+          markerId: MarkerId('marker_$i'),
+          position:
+              LatLng(double.parse(location.lat), double.parse(location.long)),
+          infoWindow: InfoWindow(
+            title: location.name,
+            snippet: location.name,
+          ),
+        ),
+      );
+    }
+  }
+
+  // void openMap() async {}
+  //   print(locations);
+  //   if (locations.isEmpty) {
+  //     return;
+  //   } else {
+  //     // String locationsQuery = locations
+  //     //     .map(
+  //     //       (location) => location.lat,
+  //     //     )
+  //     //     .join('|');
+
+  //     // The map URL with custom markers
+  //     final Uri mapUrl = Uri.parse(
+  //         "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(_generateLocationsQuery())}");
+
+  //     // final Uri mapUrl = Uri.parse(
+  //     //     "https://www.google.com/maps/search/?api=1&query=${locations[0].lat},${locations[0].long}");
+
+  //     try {
+  //       await launchUrl(mapUrl);
+  //     } catch (e) {
+  //       print('Map url: ${mapUrl}');
+  //       // Handle any exceptions that might occur during launching the URL
+  //       print("Error launching map URL: $e");
+  //     }
   //   }
   // }
+
+  // String _generateLocationsQuery() {
+  //   String query = "";
+
+  //   for (var location in locations) {
+  //     query += "${location.lat},${location.long},";
+  //   }
+
+  //   return query;
+  // }
+
+  // // Future<void> openMap(String latitude, String longitude, String name) async {
+  // //   double lat = double.parse(latitude);
+  // //   double long = double.parse(longitude);
+  // //   final availableMap = await MapLauncher.installedMaps;
+
+  // //   availableMap.first.showMarker(coords: Coords(lat, long), title: name);
+  // // }
 }

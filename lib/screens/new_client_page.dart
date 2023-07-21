@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_unnecessary_containers,
+// ignore_for_file: avoid_unnecessary_containers,, prefer_const_constructors
 
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +34,7 @@ class _PageNewClientState extends State<PageNewClient> {
 
   String currentAddress = 'My Address';
   late Position currentPosition;
+  DiscountTypeEnum? discountEnum;
 
   final formKey = GlobalKey<FormState>();
   final contactNameController = TextEditingController();
@@ -941,15 +942,67 @@ class _PageNewClientState extends State<PageNewClient> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            'Total cost: ${totalCost.toStringAsFixed(2)}',
+                            'Net Amount: ${totalCost.toStringAsFixed(2)}',
                             style: const TextStyle(
+                              color: Colors.grey,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
                         ],
                       ),
-                    )
+                    ),
+              Row(
+                children: [
+                  Text(
+                    'Discount',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Expanded(
+                    child: RadioListTile(
+                      value: DiscountTypeEnum.percentage,
+                      groupValue: discountEnum,
+                      onChanged: (val) {
+                        setState(() {
+                          discountEnum = val;
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile(
+                      value: DiscountTypeEnum.amount,
+                      groupValue: discountEnum,
+                      onChanged: (val) {
+                        setState(() {
+                          discountEnum = val;
+                        });
+                      } ,
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 80,
+              ),
             ],
           ),
         ),
@@ -1663,4 +1716,8 @@ class _PageNewClientState extends State<PageNewClient> {
       totalCostIncludExcludeController.text = productTotalController.text;
     }
   }
+
+  void calculateDiscount() {}
 }
+
+enum DiscountTypeEnum { percentage, amount }
